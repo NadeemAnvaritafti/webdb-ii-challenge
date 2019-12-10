@@ -5,6 +5,7 @@ const db = require('../data/db-config');
 const router = express.Router();
 
 
+// ---------------------------- GET ------------------------- //
 router.get('/', (req, res) => {
     db('cars')
     .then(cars => {
@@ -40,6 +41,7 @@ router.get('/:id', (req, res) => {
 })
 
 
+// --------------------------------- POST ------------------------------ //
 router.post('/', validateCar, (req, res) => {
     const carData = req.body;
     db('cars')
@@ -56,6 +58,56 @@ router.post('/', validateCar, (req, res) => {
         res.status(500).json({ errorMessage: 'Failed to add car data' })
     })
 })
+
+
+
+// --------------------------- PUT ------------------------------ //
+router.put('/:id', validateCar, (req, res) => {
+    const { id } = req.params;
+    const carData = req.body;
+    db('cars')
+    .where({ id })
+    .update(carData)
+    .then(count => {
+        if (count > 0) {
+            res.status(200).json({ message: `${count} record updated` });
+        } else {
+            res.status(404).json({ message: 'car not found' });
+        }
+    })
+    .catch(error => {
+        console.log(error);
+        res.status(500).json({ errorMessage: 'Error updating the car data' });
+    })
+})
+
+
+
+// ----------------------------- DELETE ------------------------------ //
+router.delete('/:id', (req, res) => {
+    let deletedCarObject = {};
+    db('cars')
+    .where({ id: req.params.id })
+    .then(car => {
+        deletedCarObject = car;
+        deletedCarObject[0].deleted = 'Record Deleted'
+    })
+    db('cars')
+    .where({ id: req.params.id })
+    .del()
+    .then(count => {
+        if (count > 0) {
+            res.status(200).json(deletedCarObject[0]);
+        } else {
+            res.status(404).json({ message: 'car not found' });
+        }
+    })
+    .catch(error => {
+        console.log(error);
+        res.status(500).json({ errorMessage: 'Error deleting the car data' });
+    })
+})
+
 
 
 
